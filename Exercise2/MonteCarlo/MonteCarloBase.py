@@ -109,6 +109,9 @@ class MonteCarloAgent(Agent):
 		self.epsilon = epsilon
 
 
+	def computeHyperparameters(self, numTakenActions, episodeNumber):
+		self.epsilon = epsilon
+	
 if __name__ == '__main__':
 
 	parser = argparse.ArgumentParser()
@@ -134,7 +137,7 @@ if __name__ == '__main__':
 		status = 0
 
 		while status==0:
-			epsilon = agent.computeHyperparameters(self, numTakenActions, episode)
+			epsilon = agent.computeHyperparameters(numTakenActions, episode)
 			agent.setEpsilon(epsilon)
 			obsCopy = observation.copy()
 			agent.setState(agent.toStateRepresentation(obsCopy))
