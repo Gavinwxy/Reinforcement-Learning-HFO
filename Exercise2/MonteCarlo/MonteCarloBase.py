@@ -5,6 +5,8 @@ import numpy as np
 import collections
 from DiscreteHFO.HFOAttackingPlayer import HFOAttackingPlayer
 from DiscreteHFO.Agent import Agent
+import argparse
+
 
 class MonteCarloAgent(Agent):
 	def __init__(self, discountFactor, epsilon, initVals=0.0):
@@ -29,7 +31,7 @@ class MonteCarloAgent(Agent):
 			qValue = self.qTable[state][action][0]
 			self.qTable[state][action][0] = 1/qCnt * (self.episodeReturn - qValue)
 			updateRecord.append(self.qTable[state][action][0])
-			
+
 		return updateRecord
 
 	def toStateRepresentation(self, state):
@@ -58,7 +60,7 @@ class MonteCarloAgent(Agent):
 		actions = []
 		values = []
 		# Select actions according to probs
-		allPossibleActions = self.qTable[state]:
+		allPossibleActions = self.qTable[state]
 		for action, actionInf in allPossibleActions.items():
 			actions.append(action)
 			values.append(actionInf[0])
@@ -96,7 +98,7 @@ class MonteCarloAgent(Agent):
 
 	def act_baseline(self):
 		actions = []
-		allPossibleActions = self.qTable[state]:
+		allPossibleActions = self.qTable[state]
 		for action, actionInf in allPossibleActions.items():
 			actions.append(action)
 
@@ -109,13 +111,21 @@ class MonteCarloAgent(Agent):
 
 if __name__ == '__main__':
 
+	parser = argparse.ArgumentParser()
+	parser.add_argument('--id', type=int, default=0)
+	parser.add_argument('--numOpponents', type=int, default=0)
+	parser.add_argument('--numTeammates', type=int, default=0)
+	parser.add_argument('--numEpisodes', type=int, default=500)
+
+	args=parser.parse_args()
+
 	#Init Connections to HFO Server
 	hfoEnv = HFOAttackingPlayer(numOpponents = args.numOpponents, numTeammates = args.numTeammates, agentId = args.id)
 	hfoEnv.connectToServer()
 
 	# Initialize a Monte-Carlo Agent
 	agent = MonteCarloAgent(discountFactor = 0.99, epsilon = 0.1)
-	numEpisodes = 500
+	numEpisodes = args.numEpisodes
 	numTakenActions = 0
 	# Run training Monte Carlo Method
 	for episode in range(numEpisodes):	
