@@ -17,9 +17,8 @@ class BellmanDPSolver(object):
 		
 	def BellmanUpdate(self):
 		currentValues = self.values
-		currentPolicy = self.policy
 		for state in self.states:
-			actions = currentPolicy[state]
+			actions = self.MDP.A
 			possibleValue = {}
 			for action in actions:
 				nextProb = self.MDP.probNextStates(state, action)
@@ -44,7 +43,7 @@ class BellmanDPSolver(object):
 
 		
 if __name__ == '__main__':
-	solution = BellmanDPSolver(0.9)
+	solution = BellmanDPSolver(1)
 	for i in range(20000):
 		values, policy = solution.BellmanUpdate()
 	print("Values : ", values)
