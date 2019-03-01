@@ -3,9 +3,9 @@
 
 import numpy as np
 import collections
+import argparse
 from DiscreteHFO.HFOAttackingPlayer import HFOAttackingPlayer
 from DiscreteHFO.Agent import Agent
-import argparse
 
 
 class MonteCarloAgent(Agent):
@@ -13,43 +13,51 @@ class MonteCarloAgent(Agent):
 		super(MonteCarloAgent, self).__init__()
 		self.discountFactor = discountFactor
 		self.inivals = initVals
-		self.qTable = {} # Contains all state-action pairs: {(S): {A1: [value, qCnt], A2:[...]}
-		self.qInitial = {}
-		for action in self.possibleActions:
-			self.qInitial[action] = [0, 0] 
-			
+		self.qTable = {} # Contains all state-action pairs: {(S):{(S,A):[value, qcnt],...},...}
+		self.epsilon = epsilon
+
 	def learn(self):
 		updateRecord = []
 		# Update state action pair
-		for stateActionPairs in qEpisode.keys():
+		for stateActionPairs in self.experience.keys():
 			state = stateActionPairs[0]
-			action = stateActionPairs[1]
-			self.qTable[state][action][1] += 1
+			self.qTable[state][stateActionPairs][1] += 1
 
 			# Update value
-			qCnt = self.qTable[state][action][1]
-			qValue = self.qTable[state][action][0]
-			self.qTable[state][action][0] = 1/qCnt * (self.episodeReturn - qValue)
-			updateRecord.append(self.qTable[state][action][0])
+			qCnt = self.qTable[state][stateActionPairs][1]
+			qValue = self.qTable[state][stateActionPairs][0]
+			self.qTable[state][stateActionPairs][0] += 1/qCnt * (self.episodeReturn - qValue)
+			updateRecord.append(self.qTable[state][stateActionPairs][0])
 
 		return updateRecord
 
 	def toStateRepresentation(self, state):
 		# Only take the state of the attacking agent
-		self.state = state[0]
+		return state[0]
 
 	def setExperience(self, state, action, reward, status, nextState):
 		# Store state action pair appears in episode
 		qEpisode = (state, action)
 		self.experience[qEpisode] = [reward, status, nextState] # Ordered dict 
 		# Accumulate returns
+		#self.episodeReturn = self.discountFactor*self.episodeReturn + reward
 		self.episodeReturn += np.power(self.discountFactor, self.discountPower)*reward
-		self.discountPower = self.discountFactor+1
+		self.discountPower += 1
+
+	def stateInit(self, state):
+		qInit = {}
+		for action in self.possibleActions:
+			qInit[(state, action)] = [0, 0]
+		
+		return qInit
+
 
 	def setState(self, state):
 		if not state in self.qTable:
-			self.qTable[state] = self.qInitial
-		self.state = state # This sate should be (1,1) form
+			self.qTable[state] = self.stateInit(state)
+
+		self.state = state # This state should be (1,1) form
+		
 
 	def reset(self):
 		self.experience = collections.OrderedDict()
@@ -60,9 +68,9 @@ class MonteCarloAgent(Agent):
 		actions = []
 		values = []
 		# Select actions according to probs
-		allPossibleActions = self.qTable[state]
+		allPossibleActions = self.qTable[self.state]
 		for action, actionInf in allPossibleActions.items():
-			actions.append(action)
+			actions.append(action[1])
 			values.append(actionInf[0])
 
 		actionIndex = [i for i, x in enumerate(values) if x == max(values)]
@@ -79,11 +87,6 @@ class MonteCarloAgent(Agent):
 				if idx != actionIndex[0]:
 					probs[idx] = self.epsilon/actNum
 
-		# All values are the same
-		elif optActNum == actNum:
-			for idx in range(actNum):
-				probs[idx] = 1/actNum
-
 		# Multiple best values
 		else:
 			selectedIdx = np.random.choice(actionIndex)
@@ -92,17 +95,12 @@ class MonteCarloAgent(Agent):
 				if idx != selectedIdx:
 					probs[idx] = self.epsilon/actNum			
 			
-		action = np.random.choice(actions, 1, probs)
-
+		action = np.random.choice(actions, p=probs)
 		return action
 
 	def act_baseline(self):
-		actions = []
-		allPossibleActions = self.qTable[state]
-		for action, actionInf in allPossibleActions.items():
-			actions.append(action)
-
-		action = np.random.choice(actions, 1)
+		action = np.random.choice(self.possibleActions)
+		return action
 
 
 	def setEpsilon(self, epsilon):
@@ -110,7 +108,7 @@ class MonteCarloAgent(Agent):
 
 
 	def computeHyperparameters(self, numTakenActions, episodeNumber):
-		self.epsilon = epsilon
+		return self.epsilon
 	
 if __name__ == '__main__':
 
