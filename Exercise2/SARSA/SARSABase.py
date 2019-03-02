@@ -19,7 +19,7 @@ class SARSAAgent(Agent):
 	def learn(self):
 		lastState = self.episodeRecord[-1][0]
 		# Check if last sate is terminate state
-		if  lastState not in self.qTable:
+		if not lastState in self.qTable:
 			self.qTable[lastState] = self.stateInit(lastState)
 
 		# The current state
@@ -85,7 +85,7 @@ class SARSAAgent(Agent):
 		return state[0]
 
 	def reset(self):
-		self.episodeReturn = []
+		self.episodeRecord = []
 
 	def setLearningRate(self, learningRate):
 		self.learningRate = learningRate
