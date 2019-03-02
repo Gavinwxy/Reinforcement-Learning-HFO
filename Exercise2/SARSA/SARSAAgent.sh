@@ -15,11 +15,11 @@ sleep 5
 echo "Attacker Controller Initialized"
 
 sleep 5
-./DiscreteHFO/Goalkeeper.py --numEpisodes=1000 &
+./DiscreteHFO/Goalkeeper.py >/dev/null 2>&1 &
 echo "Goalkeeper Initialized"
 
 sleep 5
-./DiscreteHFO/DiscretizedDefendingPlayer.py --numEpisodes=1000 --id=1 &
+./DiscreteHFO/DiscretizedDefendingPlayer.py --id=1 >/dev/null 2>&1 &
 echo "Defending Player Initialized"
 
 sleep 5
