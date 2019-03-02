@@ -17,6 +17,11 @@ class SARSAAgent(Agent):
 		self.episodeRecord = []
 
 	def learn(self):
+		lastState = self.episodeRecord[-1][0]
+		# Check if last sate is terminate state
+		if  lastState not in self.qTable:
+			self.qTable[lastState] = self.stateInit(lastState)
+
 		# The current state
 		state1 = self.episodeRecord[-2][0]
 		action1 = self.episodeRecord[-2][1]
@@ -24,7 +29,7 @@ class SARSAAgent(Agent):
 		value1 = self.qTable[state1][(state1,action1)]
 
 		# The next state
-		state2 = self.episodeRecord[-1][0]
+		state2 = lastState
 		action2 = self.episodeRecord[-1][1]
 		value2 = self.qTable[state2][(state2, action2)]
 
