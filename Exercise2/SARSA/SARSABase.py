@@ -35,8 +35,10 @@ class SARSAAgent(Agent):
 
 		# Update q table
 		self.qTable[state1][(state1,action1)] += self.learningRate*(reward1 + self.discountFactor*value2 - value1)
+		return value2 - value1
 
 	def act(self):
+		# Epsilon greedy
 		values = []
 		actions = []
 		# Select actions according to probs
