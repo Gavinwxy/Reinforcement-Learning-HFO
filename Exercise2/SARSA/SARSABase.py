@@ -29,7 +29,7 @@ class SARSAAgent(Agent):
 		value2 = self.qTable[state2][(state2, action2)]
 
 		# Update q table
-		self.qTable[state1][(state1,action1)] += reward1 + self.discountFactor*value2 - value1
+		self.qTable[state1][(state1,action1)] += self.learningRate*(reward1 + self.discountFactor*value2 - value1)
 
 	def act(self):
 		values = []
