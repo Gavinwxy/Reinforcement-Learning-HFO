@@ -132,7 +132,7 @@ if __name__ == '__main__':
 			numTakenActions += 1
 
 			nextObservation, reward, done, status = hfoEnv.step(action)
-			print(obsCopy, action, reward, nextObservation)
+			#print(obsCopy, action, reward, nextObservation)
 			agent.setExperience(agent.toStateRepresentation(obsCopy), action, reward, status, agent.toStateRepresentation(nextObservation))
 			
 			if not epsStart :
