@@ -82,8 +82,16 @@ class HFOEnv(object):
 	
 	def get_reward(self, status, nextState):
 
+		# {0:in_game, 1:goal, 2:captured_by_defender, 3:out_ouf_bounds, 4:out_of_time, 5:server_down}
+		# Reward +1 only when goal, and -0.4 being captured
 		reward = 0.0
 		info = {}
+		if status == GOAL:
+			reward += 1
+			info['GOAL'] = 1
+		elif status == CAPTURED_BY_DEFENSE:
+			reward -= 0.4
+			info['Captured'] = -0.4	
 
 		return reward, info
 

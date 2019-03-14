@@ -11,6 +11,7 @@ import math
 class ValueNetwork(nn.Module):
 	def __init__(self):
 		super(ValueNetwork, self).__init__()
+		
 
 	def forward(self, inputs) :
 		

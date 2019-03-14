@@ -11,7 +11,7 @@ class QLearningAgent(Agent):
 		super(QLearningAgent, self).__init__()
 		self.learningRate = learningRate
 		self.discountFactor = discountFactor
-		self.inivals = initVals
+		self.initVals = initVals
 		self.qTable = {} # Contains all state-action pairs: {(S):{(S,A):value,...},...}
 		self.epsilon = epsilon
 		self.episodeRecord = []
@@ -62,7 +62,7 @@ class QLearningAgent(Agent):
 	def stateInit(self, state):
 		qInit = {}
 		for action in self.possibleActions:
-			qInit[(state, action)] = 0
+			qInit[(state, action)] = self.initVals
 		
 		return qInit
 
@@ -81,13 +81,13 @@ class QLearningAgent(Agent):
 		raise NotImplementedError
 
 	def setEpsilon(self, epsilon):
-		raise NotImplementedError
+		self.epsilon = epsilon	
 
 	def reset(self):
 		raise NotImplementedError
 		
 	def computeHyperparameters(self, numTakenActions, episodeNumber):
-		raise NotImplementedError
+		return self.learningRate, self.epsilon
 
 if __name__ == '__main__':
 
