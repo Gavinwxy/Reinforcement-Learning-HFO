@@ -22,15 +22,16 @@ class IndependentQLearningAgent(Agent):
 	def setExperience(self, state, action, reward, status, nextState):
 		self.episodeRecord = [(state, action, reward), nextState]
 	
+	
 	def learn(self):
-		nextState = self.episodeRecord[-1][0]
+		nextState = self.episodeRecord[-1]
 		# Check if next sate is in q table
 		if not nextState in self.qTable:
 			self.qTable[nextState] = self.stateInit(nextState)
 		
-		currentState = self.episodeRecord[-2][0]
-		action = self.episodeRecord[-2][1]
-		reward = self.episodeRecord[-2][2]
+		currentState = self.episodeRecord[0][0]
+		action = self.episodeRecord[0][1]
+		reward = self.episodeRecord[0][2]
 		currentValue = self.qTable[currentState][(currentState, action)]
 
 		# Obtain target value according to target policy
@@ -64,9 +65,17 @@ class IndependentQLearningAgent(Agent):
 
 		return action
 
+	def act_base(self):
+		action = np.random.choice(self.possibleActions)
+		return action
+
 	def toStateRepresentation(self, state):
 		# Q = [[loc1],[loc2]]
-		return state[0][0]
+		state_tmp = deepcopy(state)
+		agent_locs = []	
+		for loc in state_tmp[0]:
+			agent_locs.append(tuple(loc))
+		return tuple(agent_locs)
 
 	def stateInit(self, state):
 		qInit = {}
@@ -101,15 +110,15 @@ if __name__ == '__main__':
 	MARLEnv = DiscreteMARLEnvironment(numOpponents = args.numOpponents, numAgents = args.numAgents)
 	agents = []
 	for i in range(args.numAgents):
-		agent = IndependentQLearningAgent(learningRate = 0.1, discountFactor = 0.9, epsilon = 1.0)
+		agent = IndependentQLearningAgent(learningRate = 0.1, discountFactor = 0.9, epsilon = 0.1)
 		agents.append(agent)
 
 	numEpisodes = args.numEpisodes
 	numTakenActions = 0
+	totalReward = 0.0
 	for episode in range(numEpisodes):	
 		status = ["IN_GAME","IN_GAME","IN_GAME"]
 		observation = MARLEnv.reset()
-		totalReward = 0.0
 		timeSteps = 0
 			
 		while status[0]=="IN_GAME":
@@ -123,7 +132,7 @@ if __name__ == '__main__':
 				obsCopy = deepcopy(observation[agentIdx])
 				stateCopies.append(obsCopy)
 				agents[agentIdx].setState(agent.toStateRepresentation(obsCopy))
-				actions.append(agents[agentIdx].act())
+				actions.append(agents[agentIdx].act_base())
 			numTakenActions += 1
 			nextObservation, reward, done, status = MARLEnv.step(actions)
 
@@ -133,4 +142,8 @@ if __name__ == '__main__':
 				agents[agentIdx].learn()
 				
 			observation = nextObservation
-			totalReward += reward
+			totalReward += reward[1]
+
+		if episode % 1000 == 0:
+			print(totalReward)
+			totalReward = 0.0
