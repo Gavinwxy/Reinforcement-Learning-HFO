@@ -51,7 +51,7 @@ class WolfPHCAgent(Agent):
 		currentTable[action][0] += error
 		currentTable['state_count'] += 1
 
-		return targetValue - currentValue
+		return error
 
 
 	def act(self):
@@ -74,6 +74,7 @@ class WolfPHCAgent(Agent):
 	def calculateAveragePolicyUpdate(self):
 		currentTable = self.qTable[self.state]
 		state_cnt = currentTable['state_count']
+		avg_policy_collect = []
 
 		for action, policy_set in currentTable.items():
 			if action != 'state_count':
@@ -82,6 +83,9 @@ class WolfPHCAgent(Agent):
 				error = 1/state_cnt * (policy - avg_policy)
 				# Update avg policy
 				currentTable[action][2] += error
+				avg_policy_collect.append(currentTable[action][2])
+
+		return avg_policy_collect
 
 
 	def calculatePolicyUpdate(self):
@@ -90,6 +94,7 @@ class WolfPHCAgent(Agent):
 		actions = []
 		exp_policy = 0
 		exp_avg_policy = 0
+		policy_collect = []
 
 		for act, val in currentTable.items():
 			if act != 'state_count':
@@ -118,6 +123,13 @@ class WolfPHCAgent(Agent):
 		# Update probs for optimal actions
 		for act_opt in optAct:
 			currentTable[act_opt][1] += p/(len(optAct))
+
+
+		for action, policy_set in currentTable.items():
+			if action != 'state_count':
+				policy_collect.append(currentTable[action][1])
+
+		return policy_collect
 	
 	def toStateRepresentation(self, rawState):
 		locs = []

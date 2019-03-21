@@ -69,6 +69,8 @@ class JointQLearningAgent(Agent):
 		table_curState['state_count'] += 1
 		table_curState[action_oppo] += 1
 
+		return error
+
 	def act(self):
 		table = self.qTable[self.state]
 		state_cnt = table['state_count']
