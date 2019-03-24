@@ -8,7 +8,8 @@ from DiscreteMARLUtils.Agent import Agent
 from copy import deepcopy
 import argparse
 import numpy as np
-
+import itertools
+from tqdm import tqdm
 
 np.random.seed(0)
 	
@@ -99,25 +100,40 @@ class IndependentQLearningAgent(Agent):
 	def setLearningRate(self, learningRate):
 		self.learningRate = learningRate
 		
-	def computeHyperparameters(self, numTakenActions, episodeNumber):
-		return self.learningRate, self.epsilon
+	def computeHyperparameters_cosAn(self, args, episodeIdx, episodeTotal):
+		lr_max = args[0]
+		lr_min = args[1]
+		ep_max = args[2]
+		ep_min = args[3]
 
-
-	def computeHyperparameters_cosAn(self, episodeIdx, episodeTotal):
-	
-		ep_min = 5e-4
-		ep_max = 2e-1
+		lr = lr_min + 1/2*(lr_max-lr_min)*(1+np.cos((episodeIdx/episodeTotal)*np.pi))
 		ep = ep_min + 1/2*(ep_max-ep_min)*(1+np.cos((episodeIdx/episodeTotal)*np.pi))
+
 		return lr, ep
 
-	def computeHyperparameters(self, episodeIdx):
-
-		k = 1e-4
-		ep_initial = 0.2
-		ep = ep_initial * np.exp(-k*episodeIdx)
-		return self.learningRate, ep
+	def computeHyperparameters_Exp(self, args, episodeIdx):
+		lr_initial = args[0]
+		k1 = args[1]
+		ep_initial = args[2]
+		k2 = args[3]
+	
+		lr = lr_initial * np.exp(-k1*episodeIdx)
+		ep = ep_initial * np.exp(-k2*episodeIdx)
+		return lr, ep
 
 if __name__ == '__main__':
+
+    # For cosineAnnealling
+	lr_max = [1e-1, 5e-2, 1e-2]
+	lr_min = [5e-3, 1e-3, 5e-4]
+	ep_max = [1e-1, 5e-2, 1e-2]
+	ep_min = [5e-3, 1e-3, 5e-4]
+
+    # For exponential 
+	lr = [1e-1, 5e-2, 1e-2]
+	k1 = [0, 1e-5, 1e-4]
+	ep = [5e-2, 1e-1, 2e-1]
+	k2 = [0, 1e-5, 1e-4]
 
 	parser = argparse.ArgumentParser()
 	parser.add_argument('--numOpponents', type=int, default=1)
@@ -127,46 +143,68 @@ if __name__ == '__main__':
 	args=parser.parse_args()
 
 	MARLEnv = DiscreteMARLEnvironment(numOpponents = args.numOpponents, numAgents = args.numAgents)
-	agents = []
-	for i in range(args.numAgents):
-		agent = IndependentQLearningAgent(learningRate = 0.1, discountFactor = 0.9, epsilon = 0.1)
-		agents.append(agent)
 
-	numEpisodes = args.numEpisodes
-	numTakenActions = 0
-	totalReward = 0.0
-	reward_collect = []
-	for episode in range(numEpisodes):	
-		status = ["IN_GAME","IN_GAME","IN_GAME"]
-		observation = MARLEnv.reset()
-		timeSteps = 0
-			
-		while status[0]=="IN_GAME":
-			for agent in agents:
-				learningRate, epsilon = agent.computeHyperparameters(episode)
-				agent.setEpsilon(epsilon)
-				agent.setLearningRate(learningRate)
-			actions = []
-			stateCopies = []
-			for agentIdx in range(args.numAgents):
-				obsCopy = deepcopy(observation[agentIdx])
-				stateCopies.append(obsCopy)
-				agents[agentIdx].setState(agent.toStateRepresentation(obsCopy))
-				actions.append(agents[agentIdx].act())
-			numTakenActions += 1
-			nextObservation, reward, done, status = MARLEnv.step(actions)
+	best_setting = {}
+	best_avg_reward = 0
 
-			for agentIdx in range(args.numAgents):
-				agents[agentIdx].setExperience(agent.toStateRepresentation(stateCopies[agentIdx]), actions[agentIdx], reward[agentIdx], 
-					status[agentIdx], agent.toStateRepresentation(nextObservation[agentIdx]))
-				agents[agentIdx].learn()
+	itlen = (len(lr_max)*len(lr_min)*len(ep_max)*len(ep_min))
+	#itlen = (len(lr)*len(k1)*len(ep)*len(k2))
+	t = tqdm(total=itlen)
+	for arg in itertools.product(lr_max, lr_min, ep_max, ep_min):
+
+		agents = []
+		for i in range(args.numAgents):
+			agent = IndependentQLearningAgent(learningRate = 0.1, discountFactor = 0.9, epsilon = 0.1)
+			agents.append(agent)
+
+		numEpisodes = args.numEpisodes
+		numTakenActions = 0
+		totalReward = 0.0
+		reward_collect = []
+
+		for episode in range(numEpisodes):	
+			status = ["IN_GAME","IN_GAME","IN_GAME"]
+			observation = MARLEnv.reset()
+			timeSteps = 0
 				
-			observation = nextObservation
-			totalReward += reward[1]
+			while status[0]=="IN_GAME":
+				for agent in agents:
+					#learningRate, epsilon = agent.computeHyperparameters_Exp(arg, episode)
+					learningRate, epsilon = agent.computeHyperparameters_cosAn(arg, episode, numEpisodes)
+					agent.setEpsilon(epsilon)
+					agent.setLearningRate(learningRate)
+				actions = []
+				stateCopies = []
+				for agentIdx in range(args.numAgents):
+					obsCopy = deepcopy(observation[agentIdx])
+					stateCopies.append(obsCopy)
+					agents[agentIdx].setState(agent.toStateRepresentation(obsCopy))
+					actions.append(agents[agentIdx].act())
+				numTakenActions += 1
+				nextObservation, reward, done, status = MARLEnv.step(actions)
 
-		if episode % 1000 == 0:
-			print(totalReward)
-			reward_collect.append(totalReward)
-			totalReward = 0.0
+				for agentIdx in range(args.numAgents):
+					agents[agentIdx].setExperience(agent.toStateRepresentation(stateCopies[agentIdx]), actions[agentIdx], reward[agentIdx], 
+						status[agentIdx], agent.toStateRepresentation(nextObservation[agentIdx]))
+					agents[agentIdx].learn()
+					
+				observation = nextObservation
+				totalReward += reward[1]
 
-	print('Final average reward: ', sum(reward_collect)/len(reward_collect))
+			if episode % 1000 == 0:
+				#print(totalReward)
+				reward_collect.append(totalReward)
+				totalReward = 0.0
+
+		avg_reward = sum(reward_collect)/len(reward_collect)
+		if best_avg_reward < avg_reward:
+			best_avg_reward = avg_reward
+			best_setting['params'] = arg
+			best_setting['avg_reward'] = best_avg_reward
+		t.update(1)
+		t.set_description('Current Best Avg Reward: {:.4f}'.format(best_avg_reward))
+	t.close()
+	print(best_setting)
+
+	np.save('IDQ_best_cosAn.npy', best_setting)
+	#np.save('IDQ_best_Exp.npy', best_setting)

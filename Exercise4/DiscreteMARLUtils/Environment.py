@@ -2,6 +2,8 @@ import random
 import copy
 #import pygame
 
+random.seed(0)
+
 class DiscreteMARLEnvironment(object):
 	def __init__(self, numOpponents=0, numAgents=0, collisionPenalty = 0.4, visualize=False):
 		self.opponentNums = numOpponents
