@@ -237,10 +237,10 @@ if __name__ == '__main__':
 			best_avg_reward = avg_reward
 			best_setting['params'] = arg
 			best_setting['avg_reward'] = best_avg_reward
+			np.save('JAL_best_cosAn.npy', best_setting)
+			#np.save('JAL_best_Exp.npy', best_setting)
 		t.update(1)
 		t.set_description('Current Best Avg Reward: {:.4f}'.format(best_avg_reward))
 	t.close()
 	print(best_setting)
 
-	np.save('JAL_best_cosAn.npy', best_setting)
-	#np.save('JAL_best_Exp.npy', best_setting)
