@@ -37,7 +37,7 @@ class SARSAAgent(Agent):
 		error = self.learningRate*(reward1 + self.discountFactor*value2 - value1)		
 		self.qTable[state1][(state1,action1)] += error
 		
-		return self.qTable, error
+		return error
 
 	def act(self):
 		# Epsilon greedy
