@@ -34,7 +34,7 @@ class QLearningAgent(Agent):
 		error = self.learningRate*(reward+self.discountFactor*targetValue-currentValue)
 		self.qTable[currentState][(currentState, action)] += error
 
-		return targetValue - currentValue
+		return self.qTable, error
 
 	def act(self):
 		# Epsilon greedy

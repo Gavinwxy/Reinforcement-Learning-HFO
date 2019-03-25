@@ -29,7 +29,7 @@ class MonteCarloAgent(Agent):
 			self.qTable[state][stateActionPairs][0] += 1/qCnt * (self.episodeReturn - qValue)
 			updateRecord.append(self.qTable[state][stateActionPairs][0])
 
-		return updateRecord
+		return self.qTable, updateRecord
 
 	def toStateRepresentation(self, state):
 		# Only take the state of the attacking agent
