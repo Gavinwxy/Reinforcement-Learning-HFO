@@ -10,7 +10,7 @@ import itertools
 import argparse
 import numpy as np 
 
-
+np.random.seed(0)
 class JointQLearningAgent(Agent):
 	def __init__(self, learningRate, discountFactor, epsilon, numTeammates, initVals=0.0):
 		super(JointQLearningAgent, self).__init__()
@@ -81,7 +81,6 @@ class JointQLearningAgent(Agent):
 			values = []
 
 			for action_agent in self.possibleActions:
-				print(action_agent)
 				agent_act_value = 0
 				for action_oppo in self.possibleActions:
 					action_value = table[(action_agent, action_oppo)]
@@ -130,8 +129,16 @@ class JointQLearningAgent(Agent):
 			agent_locs.append(tuple(loc))
 		return tuple(agent_locs)
 		
-	def computeHyperparameters(self, numTakenActions, episodeNumber):
-		return self.learningRate, self.epsilon
+	def computeHyperparameters(self, episodeIdx, episodeTotal):
+		lr_max = 0.1
+		lr_min = 0.005
+		ep_max = 0.01
+		ep_min = 0.001
+
+		lr = lr_min + 1/2*(lr_max-lr_min)*(1+np.cos((episodeIdx/episodeTotal)*np.pi))
+		ep = ep_min + 1/2*(ep_max-ep_min)*(1+np.cos((episodeIdx/episodeTotal)*np.pi))
+
+		return lr, ep
 
 if __name__ == '__main__':
 
@@ -153,14 +160,14 @@ if __name__ == '__main__':
 	numEpisodes = numEpisodes
 	numTakenActions = 0
 	totalRewards = 0
-
+	reward_collect = []
 	for episode in range(numEpisodes):	
 		status = ["IN_GAME","IN_GAME","IN_GAME"]
 		observation = MARLEnv.reset()
 			
 		while status[0]=="IN_GAME":
 			for agent in agents:
-				learningRate, epsilon = agent.computeHyperparameters(numTakenActions, episode)
+				learningRate, epsilon = agent.computeHyperparameters(episode, numEpisodes)
 				agent.setEpsilon(epsilon)
 				agent.setLearningRate(learningRate)
 			actions = []
@@ -184,6 +191,9 @@ if __name__ == '__main__':
 			observation = nextObservation
 			totalRewards += reward[0]
 		
-		if episode % 500 == 0:
+		if episode % 1000 == 0:
 			print(totalRewards)
-			totalRewards = 0
+			reward_collect.append(totalRewards)
+			totalRewards = 0.0
+
+	print('Final average reward: ', sum(reward_collect)/len(reward_collect))

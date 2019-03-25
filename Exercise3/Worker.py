@@ -9,6 +9,7 @@ from Environment import HFOEnv
 from SharedAdam import SharedAdam
 import random
 
+random.seed(0)
 def hard_copy(targetValueNetwork, valueNetwork):
 	for target_param, param in zip(targetValueNetwork.parameters(), valueNetwork.parameters()):
 					target_param.data.copy_(param.data)
@@ -74,7 +75,7 @@ def train(valueNetwork):
 				act_value = action_values[idx]
 
 			# Obtain reward and next state
-			nextState, reward, done, status, info = hfoEnv.step(action)
+			nextState, reward, done, _, _ = hfoEnv.step(action)
 			total_reward += reward
 
 			# Compute target value

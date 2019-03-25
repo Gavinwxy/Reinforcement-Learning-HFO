@@ -205,7 +205,6 @@ if __name__ == '__main__':
 			#np.save('IDQ_best_Exp.npy', best_setting)
 		t.update(1)
 		t.set_description('Current Best Avg Reward: {:.4f}'.format(best_avg_reward))
-
 	t.close()
 	print(best_setting)
 

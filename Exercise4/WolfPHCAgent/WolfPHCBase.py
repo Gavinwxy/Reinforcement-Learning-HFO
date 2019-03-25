@@ -7,7 +7,8 @@ from DiscreteMARLUtils.Environment import DiscreteMARLEnvironment
 from DiscreteMARLUtils.Agent import Agent
 from copy import deepcopy
 import numpy as np
-		
+
+np.random.seed(0)	
 class WolfPHCAgent(Agent):
 	def __init__(self, learningRate, discountFactor, winDelta=0.01, loseDelta=0.1, initVals=0.0):
 		super(WolfPHCAgent, self).__init__()
@@ -151,15 +152,20 @@ class WolfPHCAgent(Agent):
 	def setLoseDelta(self, loseDelta):
 		self.loseDelta = loseDelta
 	
-	def computeHyperparameters(self, numTakenActions, episodeNumber):
-		return self.loseDelta, self.winDelta, self.learningRate
+	def computeHyperparameters(self, episodeIdx, episodeTotal):
+		lr_max = 0.05
+		lr_min = 0.001
+
+		lr = lr_min + 1/2*(lr_max-lr_min)*(1+np.cos((episodeIdx/episodeTotal)*np.pi))
+
+		return self.loseDelta, self.winDelta, lr
 
 if __name__ == '__main__':
 
 	parser = argparse.ArgumentParser()
 	parser.add_argument('--numOpponents', type=int, default=1)
 	parser.add_argument('--numAgents', type=int, default=2)
-	parser.add_argument('--numEpisodes', type=int, default=100000)
+	parser.add_argument('--numEpisodes', type=int, default=50000)
 
 	args=parser.parse_args()
 
@@ -175,13 +181,14 @@ if __name__ == '__main__':
 	numEpisodes = args.numEpisodes
 	numTakenActions = 0
 	totalRewards = 0
+	reward_collect = []
 	for episode in range(numEpisodes):	
 		status = ["IN_GAME","IN_GAME","IN_GAME"]
 		observation = MARLEnv.reset()
 		
 		while status[0]=="IN_GAME":
 			for agent in agents:
-				loseDelta, winDelta, learningRate = agent.computeHyperparameters(numTakenActions, episode)
+				loseDelta, winDelta, learningRate = agent.computeHyperparameters(episode, numEpisodes)
 				agent.setLoseDelta(loseDelta)
 				agent.setWinDelta(winDelta)
 				agent.setLearningRate(learningRate)
@@ -209,6 +216,9 @@ if __name__ == '__main__':
 			observation = nextObservation
 			totalRewards += reward[0]
 		
-		if episode % 500 == 0:
+		if episode % 1000 == 0:
 			print(totalRewards)
-			totalRewards = 0
+			reward_collect.append(totalRewards)
+			totalRewards = 0.0
+
+	print('Final average reward: ', sum(reward_collect)/len(reward_collect))
