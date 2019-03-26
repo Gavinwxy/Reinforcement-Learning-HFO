@@ -28,8 +28,8 @@ parser.add_argument('--seed', type=int, default=1)
 # These might include important parameters for your experiment,
 # your models, torch's multiprocessing methods, etc.
 if __name__ == "__main__" :
-    args = parser.parse_args()
-	
+	args = parser.parse_args()
+
 	# Setting Zone
 	device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 	torch.manual_seed(args.seed)
