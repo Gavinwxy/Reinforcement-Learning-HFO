@@ -116,7 +116,7 @@ if __name__ == '__main__':
 
 	args=parser.parse_args()
 
-	Init Connections to HFO Server
+	#Init Connections to HFO Server
 	hfoEnv = HFOAttackingPlayer(numOpponents = args.numOpponents, numTeammates = args.numTeammates, agentId = args.id)
 	hfoEnv.connectToServer()
 
