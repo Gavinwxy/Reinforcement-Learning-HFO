@@ -35,8 +35,8 @@ if __name__ == "__main__" :
 	torch.manual_seed(args.seed)
 	mp.set_start_method('spawn')
 
-	value_network = ValueNetwork(20,[16,16,4],4).to(device)
-	target_network = ValueNetwork(20,[16,16,4],4).to(device)
+	value_network = ValueNetwork(15,[16,16,4],4).to(device)
+	target_network = ValueNetwork(15,[16,16,4],4).to(device)
 	value_network.share_memory()
 	target_network.share_memory()
 	optimizer = SharedAdam(value_network.parameters(), lr=args.learningRate)

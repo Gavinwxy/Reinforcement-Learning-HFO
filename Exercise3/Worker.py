@@ -82,6 +82,8 @@ def train(rank, args, value_network, target_network, optimizer, device, lock, co
 			nextState, reward, done, _, _ = hfoEnv.step(act)
 			total_reward += reward
 			nextState = torch.Tensor(nextState)
+			reward = torch.Tensor(reward)
+			discountFactor = torch.Tensor(discountFactor)
 
 			# Compute target value
 			target_val = computeTargets(reward.to(device), nextState.to(device), discountFactor.to(device), done, target_network)	
@@ -89,7 +91,7 @@ def train(rank, args, value_network, target_network, optimizer, device, lock, co
 			# Update state
 			curState = nextState
 
-			# Compute step loss and com
+			# Compute step loss 
 			loss = loss_func(pred_val, target_val)
 			batch_loss += loss		
 			
@@ -122,15 +124,15 @@ def computeTargets(reward, nextObservation, discountFactor, done, targetNetwork)
 		Apply greedy policy to get max possible action value
 	'''
 	if done: # Next state terminates
-		target_value = torch.Tensor([reward])
+		target_value = reward
 	else:
 		act_vals = targetNetwork(nextObservation)
 		# Obtain the max possible action value	
 
 		vals = act_vals.detach()
-		val = torch.max(vals).item()
+		val = torch.max(vals)
 
-		target_value = torch.Tensor([reward + discountFactor * val])
+		target_value = reward + discountFactor * val
 
 	return target_value 
 
