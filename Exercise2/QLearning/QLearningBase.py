@@ -78,13 +78,13 @@ class QLearningAgent(Agent):
 		self.episodeRecord = [(state, action, reward), nextState]
 
 	def setLearningRate(self, learningRate):
-		raise NotImplementedError
+		self.learningRate = learningRate
 
 	def setEpsilon(self, epsilon):
 		self.epsilon = epsilon	
 
-	def reset(self):
-		raise NotImplementedError
+	#def reset(self):
+	#	raise NotImplementedError
 		
 	def computeHyperparameters(self, numTakenActions, episodeNumber):
 		return self.learningRate, self.epsilon

@@ -39,7 +39,6 @@ if __name__ == "__main__":
 
 	example_model = ValueNetwork(20,[15,15],4)
 	example_model.load_state_dict(torch.load('ExampleNetwork'))
-
 	# Check for correctness	
 	for a in range(len(input_floats)):
 		pred_value = computePrediction(torch.Tensor([input_floats[a]]), action_ints[a], example_model).item()
@@ -47,6 +46,7 @@ if __name__ == "__main__":
 			print("Wrong Predicted Output")
 			exit()
 		print("Correct Predicted Output")
+
 
 	for a in range(len(input_floats)):
 		target_value = computeTargets(reward_floats[a], torch.Tensor([input_floats[a]]), discountFactor, dones_bool[a], example_model).item()

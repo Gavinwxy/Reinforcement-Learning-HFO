@@ -3,10 +3,10 @@ import torch.nn as nn
 import torch.optim as optim
 import torch.nn.functional as F
 
-from Networks import ValueNetwork
+#from Networks import ValueNetwork
 from torch.autograd import Variable
-from Environment import HFOEnv
-from SharedAdam import SharedAdam
+#from Environment import HFOEnv
+#from SharedAdam import SharedAdam
 import random
 
 random.seed(0)
@@ -32,10 +32,11 @@ def train(valueNetwork):
 	hfoEnv.startEnv()
 	hfoEnv.connectToServer()
 
-	value_network = ValueNetwork(4,[16,16,4],2)
-	target_value_network = ValueNetwork(4,[16,16,4],2)
+	value_network = ValueNetwork(77,[16,16,4],4)
+	target_value_network = ValueNetwork(77,[16,16,4],4)
 	hard_copy(target_value_network, value_network)
 	optimizer = sharedAdam(value_network.parameters(), lr=learning_rate)
+	loss_func = nn.MSELoss()
 	random.seed()
 
 	# Start training through episodes
@@ -51,41 +52,33 @@ def train(valueNetwork):
 		batch_loss = 0
 		# Through time steps
 		while not done:
-			# Transverse all possible actions for current state
-			action_values = []
-			actions = []
-			for action in hfoEnv.possibleActions:
-				action_value = computePrediction(curState, action, value_network)
-				actions.append(action)
-				action_values.append(action_value[(curState, action)])
+			
+			# Correct version of value computing	
+			action_value = value_network(curState)
+			act_val_collect = action_value.numpy()
+			optAct = [i for i, x in enumerate(act_val_collect) if x == max(act_val_collect)]
 
-			optAct = [actions[i] for i, x in enumerate(action_values) if x == max(action_values)]
-
-			# Apply epsilon greedy for behaviour policy
-			probs = [1-epsilon, epsilon]
-			choice = random.choices([0, 1], weights=probs, k=1)
-			indices = [i for i in range(len(actions))]
-
-			if choice == 0:
-				action = random.choice(optAct)
-				act_value = max(action_values)
+			if random.random() < epsilon:
+				act = random.randint(0,3)
 			else:
-				idx = random.choice(indices)
-				action = actions[idx]
-				act_value = action_values[idx]
+				act = random.choice(optAct)
+
+			pred_val = action_value[act]
 
 			# Obtain reward and next state
-			nextState, reward, done, _, _ = hfoEnv.step(action)
+			nextState, reward, done, _, _ = hfoEnv.step(act)
 			total_reward += reward
+			nextState = torch.Tensor(nextState)
 
 			# Compute target value
-			target_value = computeTargets(reward, nextState, discountFactor, done, target_value_network)		
+			target_value = computeTargets(reward, nextState, discountFactor, done, target_value_network)
+			target_val = target_value.detach()		
 			
 			# Update state
 			curState = nextState
 
 			# Compute step loss and com
-			loss = 0.5 * (target_value - act_value)**2
+			loss = loss_func(pred_val, target_val)
 			batch_loss += loss
 			T += 1
 			t += 1
@@ -107,27 +100,27 @@ def computeTargets(reward, nextObservation, discountFactor, done, targetNetwork)
 	'''
 		Apply greedy policy to get max possible action value
 	'''
-	# Obtain all possible actions
-	possibelActions = HFOEnv.possibleActions
-	target_value = {} # in the form of {nextState: target_value}
 	if done: # Next state terminates
-		target_value[nextObservation] = reward
+		target_value = torch.Tensor([reward])
 	else:
-		target_values = []
-		for action in possibelActions:
-			target_values.append(targetNetwork(nextObservation, action))
-		# Obtain the max possible action value
-		target_value[nextObservation] = reward + discountFactor*max(target_values)
-		
-	return target_value
+		act_vals = targetNetwork(nextObservation)
+		# Obtain the max possible action value	
+
+		vals = act_vals.detach()
+		val = torch.max(vals).item()
+
+		target_value = torch.Tensor([reward + discountFactor * val])
+
+	return target_value 
 
 def computePrediction(state, action, valueNetwork):
 	'''
 		Apply epsilon greedy on possible action value
 	'''
-	action_value = {} # in the form of {(state, action): action_value}
-	action_value[(state,action)] = valueNetwork(state, action)
-	return action_value
+	act_vals = valueNetwork(state)
+	act_val = act_vals[0][action]
+
+	return act_val
 
 # Function to save parameters of a neural network in pytorch.
 def saveModelNetwork(model, strDirectory):
