@@ -4,7 +4,7 @@
 import numpy as np
 import collections
 import argparse
-#from DiscreteHFO.HFOAttackingPlayer import HFOAttackingPlayer
+from DiscreteHFO.HFOAttackingPlayer import HFOAttackingPlayer
 from DiscreteHFO.Agent import Agent
 
 
@@ -116,9 +116,9 @@ if __name__ == '__main__':
 
 	args=parser.parse_args()
 
-	#Init Connections to HFO Server
-	#hfoEnv = HFOAttackingPlayer(numOpponents = args.numOpponents, numTeammates = args.numTeammates, agentId = args.id)
-	#hfoEnv.connectToServer()
+	Init Connections to HFO Server
+	hfoEnv = HFOAttackingPlayer(numOpponents = args.numOpponents, numTeammates = args.numTeammates, agentId = args.id)
+	hfoEnv.connectToServer()
 
 	# Initialize a Monte-Carlo Agent
 	agent = MonteCarloAgent(discountFactor = 0.99, epsilon = 0.1)
