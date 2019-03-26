@@ -53,7 +53,7 @@ class HFOEnv(object):
 	def connectToServer(self):
 		os.system("./Goalkeeper.py --numEpisodes=8000 --port={} &".format(str(self.port)))
 		time.sleep(2)
-		self.hfo.connectToServer(LOW_LEVEL_FEATURE_SET,self.config_dir,self.port,self.server_addr,self.team_name,self.play_goalie)
+		self.hfo.connectToServer(HIGH_LEVEL_FEATURE_SET,self.config_dir,self.port,self.server_addr,self.team_name,self.play_goalie)
 
 	# This method computes the resulting status and states after an agent decides to take an action
 	def act(self, actionString):
