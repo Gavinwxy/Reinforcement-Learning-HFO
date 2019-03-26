@@ -22,9 +22,9 @@ def train(rank, args, value_network, target_network, optimizer, device, lock, co
 	# Seed initialize session
 	torch.manual_seed(args.seed+rank)
 
-	port = rank
-	env_seed = args.seed+rank+1
-	random_seed = args.seed+rank+2
+	port = rank+10000
+	env_seed = rank+123
+	random_seed = rank+100
 	
 
 	# Hyperparameters

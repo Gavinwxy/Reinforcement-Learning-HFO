@@ -79,7 +79,7 @@ class MonteCarloAgent(Agent):
 			actions.append(action[1])
 			values.append(actionInf[0])
 
-		optAct = [i for i, x in enumerate(values) if x == max(values)]
+		optAct = [actions[i] for i, x in enumerate(values) if x == max(values)]
 		
 		# Setting epsilon greedy algorithm
 		probs = [1-self.epsilon, self.epsilon]
