@@ -22,7 +22,7 @@ def train(rank, args, value_network, target_network, optimizer, device, lock, co
 	# Seed initialize session
 	torch.manual_seed(args.seed+rank)
 
-	port = rank+10000
+	port = rank*100+10000
 	env_seed = rank+123
 	random_seed = rank+100
 	
@@ -67,7 +67,8 @@ def train(rank, args, value_network, target_network, optimizer, device, lock, co
 			
 			# Correct version of value computing	
 			action_value = value_network(curState.to(device))
-			act_val_collect = action_value.numpy()[0]
+			print(action_value)
+			act_val_collect = action_value.detach().cpu().numpy()
 			optAct = [i for i, x in enumerate(act_val_collect) if x == max(act_val_collect)]
 
 			if random.random() < epsilon:
