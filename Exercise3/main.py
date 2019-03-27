@@ -14,7 +14,7 @@ parser = argparse.ArgumentParser(description='RL Ex3 Training !')
 
 parser.add_argument('--numProcesses', type=int, default=8)
 #parser.add_argument('--numEpisode', type=int, default=8000)
-parser.add_argument('--timeStep', type=int, default=32e6)
+parser.add_argument('--timeStep', type=int, default=1e6)
 parser.add_argument('--learningRate', type=float, default=1e-3)
 parser.add_argument('--epsilon', type=float, default=0.1)
 parser.add_argument('--discountFactor', type=float, default=0.99)

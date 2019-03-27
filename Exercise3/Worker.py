@@ -22,7 +22,7 @@ def train(rank, args, value_network, target_network, optimizer, device, lock, co
 	# Seed initialize session
 	torch.manual_seed(args.seed+rank)
 
-	port = rank*100+10000
+	port = rank*100+15000
 	env_seed = rank+123
 	random_seed = rank+100
 	
@@ -49,21 +49,21 @@ def train(rank, args, value_network, target_network, optimizer, device, lock, co
 	# Counter initialization
 	t = 0 # thread step counter (for network updating)
 	actions = ['MOVE', 'SHOOT', 'DRIBBLE', 'GO_TO_BALL']
+	episode = 0
+	total_reward = 0
+	saved_cnt = 0
+	batch_loss = 0
+
 	# Start training through episodes
-	while True:
+	while counter.value <= args.timeStep:
 
 		done = False
 		curState = hfoEnv.reset()
 		curState = torch.Tensor(curState)
-		total_reward = 0
-		batch_loss = 0
-		saved_cnt = 0
+		episode += 1
 
 		# Through time steps
 		while not done:
-			# Check global counter
-			if counter.value > args.timeStep:
-				return
 			
 			# Correct version of value computing	
 			action_value = value_network(curState.to(device))
@@ -82,7 +82,6 @@ def train(rank, args, value_network, target_network, optimizer, device, lock, co
 
 			# Obtain reward and next state
 			nextState, reward, done, _, _ = hfoEnv.step(actions[act])
-			total_reward += reward
 			nextState = torch.Tensor(nextState)
 			reward = torch.Tensor([reward])
 			discountFactor = torch.Tensor([discountFactor])
@@ -97,29 +96,39 @@ def train(rank, args, value_network, target_network, optimizer, device, lock, co
 			loss = loss_func(pred_val, target_val)
 			batch_loss += loss		
 			
-			with lock:
-				# Update target network parameter
-				if counter.value % tnet_update == 0:
-					hard_copy(target_network, value_network)
-				# Update value network parameter
-				if t % vnet_update == 0 or done:
-					optimizer.zero_grad()
-					batch_loss.backward(retain_graph=True)
-					optimizer.step()
-				
-				if counter.value > 0 and counter.value % 1e6 == 0:
-					saved_cnt += 1
-					if saved_cnt == 32:
-						saved_cnt = 'last'
-					saveModelNetwork(value_network, os.path.join(model_dir, 'params_' + str(saved_cnt) + '.pth'))
 
+			with lock:
 				# Update global counter
 				counter.value = counter.value + 1
 
 			#  Update thread counter
 			t += 1
 
-		print(total_reward)
+			# Update target network parameter
+			if counter.value % tnet_update == 0:
+				hard_copy(target_network, value_network)
+
+			# Update value network parameter
+			if t % vnet_update == 0 or done:
+				optimizer.zero_grad()
+				batch_loss.backward(retain_graph=True)
+				optimizer.step()
+				batch_loss = 0
+			
+			if counter.value > 0 and counter.value % 1e6 == 0:
+				saved_cnt += 1
+				if counter.value == args.timeStep:
+					saved_cnt = 'last'
+				saveModelNetwork(value_network, os.path.join(model_dir, 'params_' + str(saved_cnt) + '.pth'))
+
+			total_reward += reward
+
+		if episode > 0 and episode % 1000 == 0:
+			with open('out.txt', 'w') as f:
+				print('Reward Per 1000 Episode: ', total_reward, file=f)
+			total_reward = 0
+
+		print(counter.value)
 
 def computeTargets(reward, nextObservation, discountFactor, done, targetNetwork):
 	'''
