@@ -115,12 +115,12 @@ def train(rank, args, value_network, target_network, optimizer, device, lock, co
 				#total_reward += reward
 				if counter.value > 0 and counter.value % 1e5 == 0:
 					# Look for global best result
-					if goal_cnt > goal_best:
-						goal_best = goal_cnt
+					if goal_cnt > goal_best.value:
+						goal_best.value = goal_cnt
 						saveModelNetwork(value_network, os.path.join(model_dir, 'overall_best.pth'))
 
 					with open('out.txt', 'a+') as f:
-						f.write('Time step: {}	Goal per 100000 time steps : {}	Overal Best Goal: {}\n'.format(counter.value, goal_cnt, goal_best))
+						f.write('Time step: {}	Goal per 100000 time steps : {}	Overal Best Goal: {}\n'.format(counter.value, goal_cnt, goal_best.value))
 					#total_reward = 0
 					goal_cnt = 0
 
