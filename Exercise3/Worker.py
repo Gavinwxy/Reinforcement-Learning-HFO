@@ -68,8 +68,10 @@ def train(rank, args, value_network, target_network, optimizer, device, lock, co
 			# Correct version of value computing	
 			action_value = value_network(curState.to(device))
 			act_val_collect = action_value.detach().cpu().numpy()
-			print(act_val_collect)
-			optAct = [i for i, x in enumerate(act_val_collect) if x == max(act_val_collect)]
+			print('original, ', act_val_collect)
+			act_val_list = act_val_collect[0]
+			print('Index0, ', act_val_list)
+			optAct = [i for i, x in enumerate(act_val_list) if x == max(act_val_list)]
 
 			if random.random() < epsilon:
 				act = random.randint(0,3)
