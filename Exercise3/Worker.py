@@ -48,7 +48,7 @@ def train(rank, args, value_network, target_network, optimizer, device, lock, co
 
 	# Counter initialization
 	t = 0 # thread step counter (for network updating)
-
+	actions = ['MOVE', 'SHOOT', 'DRIBBLE', 'GO_TO_BALL']
 	# Start training through episodes
 	while True:
 
@@ -78,9 +78,10 @@ def train(rank, args, value_network, target_network, optimizer, device, lock, co
 
 			pred_val = action_value[0][act]
 			pred_val = pred_val.to(device)
+			
 
 			# Obtain reward and next state
-			nextState, reward, done, _, _ = hfoEnv.step(act)
+			nextState, reward, done, _, _ = hfoEnv.step(actions[act])
 			total_reward += reward
 			nextState = torch.Tensor(nextState)
 			reward = torch.Tensor(reward)
