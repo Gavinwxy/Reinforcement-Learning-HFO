@@ -17,7 +17,7 @@ def hard_copy(targetValueNetwork, valueNetwork):
 					target_param.data.copy_(param.data)
 
 
-def train(rank, args, value_network, target_network, optimizer, device, lock, counter):
+def train(rank, args, value_network, target_network, optimizer, device, lock, counter, goal_best):
 
 	# Seed initialize session
 	torch.manual_seed(args.seed+rank)
@@ -51,9 +51,9 @@ def train(rank, args, value_network, target_network, optimizer, device, lock, co
 	actions = ['MOVE', 'SHOOT', 'DRIBBLE', 'GO_TO_BALL']
 	episode = 0
 	#total_reward = 0
-	saved_cnt = 0
 	batch_loss = 0
 	goal_cnt = 0
+	percent_step = args.timeStep / 100
 	# Start training through episodes
 	while counter.value <= args.timeStep:
 
@@ -64,7 +64,10 @@ def train(rank, args, value_network, target_network, optimizer, device, lock, co
 
 		# Through time steps
 		while not done:
-			
+			# Epsilon decay
+			if counter.value // percent_step == 0:
+				epsilon = args.epsilon*(1-(counter.value//percent_step)*0.0099)
+
 			# Correct version of value computing	
 			action_value = value_network(curState.to(device))
 			act_val_collect = list(action_value.detach().cpu().numpy())
@@ -103,16 +106,21 @@ def train(rank, args, value_network, target_network, optimizer, device, lock, co
 			with lock:
 				# Update global counter
 				counter.value = counter.value + 1
-				if counter.value > 0 and counter.value % 1e5 == 0:
-					saved_cnt += 1
+				if counter.value > 0 and counter.value % 1e6 == 0:
+					saved_cnt  = int(counter.value//1e6)
 					if counter.value == args.timeStep:
 						saved_cnt = 'last'
 					saveModelNetwork(value_network, os.path.join(model_dir, 'params_' + str(saved_cnt) + '.pth'))
 
 				#total_reward += reward
 				if counter.value > 0 and counter.value % 1e5 == 0:
+					# Look for global best result
+					if goal_cnt > goal_best:
+						goal_best = goal_cnt
+						saveModelNetwork(value_network, os.path.join(model_dir, 'overall_best.pth'))
+
 					with open('out.txt', 'a+') as f:
-						f.write('Current time step: {}, Goal per 100000 time steps : {}\n'.format(counter.value, goal_cnt))				
+						f.write('Time step: {}	Goal per 100000 time steps : {}	Overal Best Goal: {}\n'.format(counter.value, goal_cnt, goal_best))
 					#total_reward = 0
 					goal_cnt = 0
 

@@ -16,7 +16,7 @@ parser.add_argument('--numProcesses', type=int, default=8)
 #parser.add_argument('--numEpisode', type=int, default=8000)
 parser.add_argument('--timeStep', type=int, default=32e6)
 parser.add_argument('--learningRate', type=float, default=1e-3)
-parser.add_argument('--epsilon', type=float, default=0.05)
+parser.add_argument('--epsilon', type=float, default=0.1)
 parser.add_argument('--discountFactor', type=float, default=0.99)
 parser.add_argument('--updateIntV', type=int, default=100)
 parser.add_argument('--updateIntT', type=int, default=1000)
@@ -42,11 +42,12 @@ if __name__ == "__main__" :
 	optimizer = SharedAdam(value_network.parameters(), lr=args.learningRate)
 
 	counter = mp.Value('i', 0)
+	goal_best = mp.Value('i', 0)
 	lock = mp.Lock()
 
 	processes = []
 	for rank in range(0, args.numProcesses):
-		trainingArgs = (rank, args, value_network, target_network, optimizer, device, lock, counter)
+		trainingArgs = (rank, args, value_network, target_network, optimizer, device, lock, counter, goal_best)
 		p = mp.Process(target=train, args=trainingArgs)
 		p.start()
 		processes.append(p)
