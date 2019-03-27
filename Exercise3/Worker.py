@@ -67,8 +67,8 @@ def train(rank, args, value_network, target_network, optimizer, device, lock, co
 			
 			# Correct version of value computing	
 			action_value = value_network(curState.to(device))
-			print(action_value)
 			act_val_collect = action_value.detach().cpu().numpy()
+			print(act_val_collect)
 			optAct = [i for i, x in enumerate(act_val_collect) if x == max(act_val_collect)]
 
 			if random.random() < epsilon:
@@ -76,16 +76,16 @@ def train(rank, args, value_network, target_network, optimizer, device, lock, co
 			else:
 				act = random.choice(optAct)
 
-			pred_val = action_value[0][act]
+			pred_val = action_value[act]
 			pred_val = pred_val.to(device)
 			
 
 			# Obtain reward and next state
 			nextState, reward, done, _, _ = hfoEnv.step(actions[act])
 			total_reward += reward
-			nextState = torch.Tensor(nextState)
-			reward = torch.Tensor(reward)
-			discountFactor = torch.Tensor(discountFactor)
+			nextState = torch.Tensor([nextState])
+			reward = torch.Tensor([reward])
+			discountFactor = torch.Tensor([discountFactor])
 
 			# Compute target value
 			target_val = computeTargets(reward.to(device), nextState.to(device), discountFactor.to(device), done, target_network)	
