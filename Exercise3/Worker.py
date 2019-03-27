@@ -62,13 +62,12 @@ def train(rank, args, value_network, target_network, optimizer, device, lock, co
 		# Through time steps
 		while not done:
 			# Check global counter
-			if counter.value == args.timeStep:
+			if counter.value > args.timeStep:
 				return
 			
 			# Correct version of value computing	
 			action_value = value_network(curState.to(device))
 			act_val_collect = list(action_value.detach().cpu().numpy())
-			print(act_val_collect)
 			optAct = [i for i, x in enumerate(act_val_collect) if x==max(act_val_collect)]
 
 			if random.random() < epsilon:
@@ -105,7 +104,7 @@ def train(rank, args, value_network, target_network, optimizer, device, lock, co
 				# Update value network parameter
 				if t % vnet_update == 0 or done:
 					optimizer.zero_grad()
-					batch_loss.backward()
+					batch_loss.backward(retain_graph=True)
 					optimizer.step()
 				
 				if counter.value > 0 and counter.value % 1e6 == 0:
@@ -120,7 +119,7 @@ def train(rank, args, value_network, target_network, optimizer, device, lock, co
 			#  Update thread counter
 			t += 1
 
-	print(total_reward)
+		print(total_reward)
 
 def computeTargets(reward, nextObservation, discountFactor, done, targetNetwork):
 	'''
