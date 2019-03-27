@@ -50,7 +50,7 @@ def train(rank, args, value_network, target_network, optimizer, device, lock, co
 	t = 0 # thread step counter (for network updating)
 	actions = ['MOVE', 'SHOOT', 'DRIBBLE', 'GO_TO_BALL']
 	episode = 0
-	total_reward = 0
+	#total_reward = 0
 	saved_cnt = 0
 	batch_loss = 0
 	goal_cnt = 0
@@ -103,6 +103,19 @@ def train(rank, args, value_network, target_network, optimizer, device, lock, co
 			with lock:
 				# Update global counter
 				counter.value = counter.value + 1
+				if counter.value > 0 and counter.value % 1e5 == 0:
+					saved_cnt += 1
+					if counter.value == args.timeStep:
+						saved_cnt = 'last'
+					saveModelNetwork(value_network, os.path.join(model_dir, 'params_' + str(saved_cnt) + '.pth'))
+
+				#total_reward += reward
+				if counter.value > 0 and counter.value % 1e5 == 0:
+					with open('out.txt', 'a+') as f:
+						f.write('Current time step: {}, Goal per 100000 time steps : {}\n'.format(counter.value, goal_cnt))				
+					#total_reward = 0
+					goal_cnt = 0
+
 
 			#  Update thread counter
 			t += 1
@@ -118,19 +131,6 @@ def train(rank, args, value_network, target_network, optimizer, device, lock, co
 				optimizer.step()
 				batch_loss = 0
 			
-			if counter.value > 0 and counter.value % 1e6 == 0:
-				saved_cnt += 1
-				if counter.value == args.timeStep:
-					saved_cnt = 'last'
-				saveModelNetwork(value_network, os.path.join(model_dir, 'params_' + str(saved_cnt) + '.pth'))
-
-			#total_reward += reward
-
-		if counter.value > 0 and counter.value % 1e5 == 0:
-			with open('out.txt', 'a+') as f:
-				f.write('Current time step: {}, Goal per 100000 time steps : {}\n'.format(counter.value, goal_cnt))				
-			#total_reward = 0
-			goal_cnt = 0
 
 
 def computeTargets(reward, nextObservation, discountFactor, done, targetNetwork):
