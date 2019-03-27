@@ -125,10 +125,9 @@ def train(rank, args, value_network, target_network, optimizer, device, lock, co
 
 		if episode > 0 and episode % 1000 == 0:
 			with open('out.txt', 'w') as f:
-				print('Reward Per 1000 Episode: ', total_reward, file=f)
+				print('Reward Per 1000 Episode: ', total_reward.item(), file=f)
 			total_reward = 0
 
-		print(counter.value)
 
 def computeTargets(reward, nextObservation, discountFactor, done, targetNetwork):
 	'''
