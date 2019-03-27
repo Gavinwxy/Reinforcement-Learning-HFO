@@ -53,7 +53,7 @@ def train(rank, args, value_network, target_network, optimizer, device, lock, co
 	total_reward = 0
 	saved_cnt = 0
 	batch_loss = 0
-
+	goal_cnt = 0
 	# Start training through episodes
 	while counter.value <= args.timeStep:
 
@@ -82,6 +82,9 @@ def train(rank, args, value_network, target_network, optimizer, device, lock, co
 
 			# Obtain reward and next state
 			nextState, reward, done, _, _ = hfoEnv.step(actions[act])
+			if reward == 1:
+				goal_cnt += 1
+
 			nextState = torch.Tensor(nextState)
 			reward = torch.Tensor([reward])
 			discountFactor = torch.Tensor([discountFactor])
@@ -121,12 +124,13 @@ def train(rank, args, value_network, target_network, optimizer, device, lock, co
 					saved_cnt = 'last'
 				saveModelNetwork(value_network, os.path.join(model_dir, 'params_' + str(saved_cnt) + '.pth'))
 
-			total_reward += reward
+			#total_reward += reward
 
-		if episode > 0 and episode % 1000 == 0:
-			with open('out.txt', 'w') as f:
-				print('Reward Per 1000 Episode: ', total_reward.item(), file=f)
-			total_reward = 0
+		if counter.value > 0 and counter.value % 1e5 == 0:
+			with open('out.txt', 'a+') as f:
+				f.write('Current time step: {}, Goal per 100000 time steps : {}\n'.format(counter.value, goal_cnt))				
+			#total_reward = 0
+			goal_cnt = 0
 
 
 def computeTargets(reward, nextObservation, discountFactor, done, targetNetwork):
