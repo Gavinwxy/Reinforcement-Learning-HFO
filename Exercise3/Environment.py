@@ -91,7 +91,13 @@ class HFOEnv(object):
 			info['GOAL'] = 1
 		elif status == CAPTURED_BY_DEFENSE:
 			reward -= 0.4
-			info['Captured'] = -0.4	
+			info['Captured'] = -0.4
+		elif status == OUT_OF_BOUNDS:
+			reward -= 0.1
+			info['Out_of_bound'] = -0.1
+		elif status == OUT_OF_TIME:
+			reward -= 0.1
+			info['Out_of_time'] = -0.1	
 
 		return reward, info
 
