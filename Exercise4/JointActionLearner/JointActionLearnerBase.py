@@ -129,15 +129,13 @@ class JointQLearningAgent(Agent):
 			agent_locs.append(tuple(loc))
 		return tuple(agent_locs)
 		
-	def computeHyperparameters(self, episodeIdx, episodeTotal):
-		lr_max = 0.1
-		lr_min = 0.005
-		ep_max = 0.01
-		ep_min = 0.001
 
-		lr = lr_min + 1/2*(lr_max-lr_min)*(1+np.cos((episodeIdx/episodeTotal)*np.pi))
-		ep = ep_min + 1/2*(ep_max-ep_min)*(1+np.cos((episodeIdx/episodeTotal)*np.pi))
-
+	def computeHyperparameters(self, episodeIdx):
+		lr = 0.1 # best 0.1
+		ep_initial = 0.1 # best 0.2
+		k = 1e-4
+	
+		ep = ep_initial * np.exp(-k*episodeIdx)
 		return lr, ep
 
 if __name__ == '__main__':
@@ -154,7 +152,7 @@ if __name__ == '__main__':
 	numAgents = args.numAgents
 	numEpisodes = args.numEpisodes
 	for i in range(numAgents):
-		agent = JointQLearningAgent(learningRate = 0.1, discountFactor = 0.99, epsilon = 0.1, numTeammates=args.numAgents-1)
+		agent = JointQLearningAgent(learningRate = 0.1, discountFactor = 0.9, epsilon = 0.1, numTeammates=args.numAgents-1)
 		agents.append(agent)
 
 	numEpisodes = numEpisodes
@@ -167,7 +165,7 @@ if __name__ == '__main__':
 			
 		while status[0]=="IN_GAME":
 			for agent in agents:
-				learningRate, epsilon = agent.computeHyperparameters(episode, numEpisodes)
+				learningRate, epsilon = agent.computeHyperparameters(episode)
 				agent.setEpsilon(epsilon)
 				agent.setLearningRate(learningRate)
 			actions = []
@@ -191,7 +189,7 @@ if __name__ == '__main__':
 			observation = nextObservation
 			totalRewards += reward[0]
 		
-		if episode % 1000 == 0:
+		if episode > 0 and episode % 1000 == 0:
 			print(totalRewards)
 			reward_collect.append(totalRewards)
 			totalRewards = 0.0

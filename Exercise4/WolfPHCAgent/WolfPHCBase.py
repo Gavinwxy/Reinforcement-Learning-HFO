@@ -152,11 +152,11 @@ class WolfPHCAgent(Agent):
 	def setLoseDelta(self, loseDelta):
 		self.loseDelta = loseDelta
 	
-	def computeHyperparameters(self, episodeIdx, episodeTotal):
-		lr_max = 0.05
-		lr_min = 0.001
 
-		lr = lr_min + 1/2*(lr_max-lr_min)*(1+np.cos((episodeIdx/episodeTotal)*np.pi))
+	def computeHyperparameters(self, episodeIdx):
+		lr_initial = 0.1
+		k = 1e-4	
+		lr = lr_initial * np.exp(-k*episodeIdx)
 
 		return self.loseDelta, self.winDelta, lr
 
@@ -188,7 +188,7 @@ if __name__ == '__main__':
 		
 		while status[0]=="IN_GAME":
 			for agent in agents:
-				loseDelta, winDelta, learningRate = agent.computeHyperparameters(episode, numEpisodes)
+				loseDelta, winDelta, learningRate = agent.computeHyperparameters(episode)
 				agent.setLoseDelta(loseDelta)
 				agent.setWinDelta(winDelta)
 				agent.setLearningRate(learningRate)
@@ -216,7 +216,7 @@ if __name__ == '__main__':
 			observation = nextObservation
 			totalRewards += reward[0]
 		
-		if episode % 1000 == 0:
+		if episode > 0 and episode % 1000 == 0:
 			print(totalRewards)
 			reward_collect.append(totalRewards)
 			totalRewards = 0.0

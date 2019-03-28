@@ -100,24 +100,13 @@ class IndependentQLearningAgent(Agent):
 		self.learningRate = learningRate
 		
 
-	def computeHyperparameters_cosAn(self, episodeIdx, episodeTotal):
-		lr_max = 0.1
-		lr_min = 0.005
-		ep_max = 0.1
-		ep_min = 0.0005
-
-		lr = lr_min + 1/2*(lr_max-lr_min)*(1+np.cos((episodeIdx/episodeTotal)*np.pi))
-		ep = ep_min + 1/2*(ep_max-ep_min)*(1+np.cos((episodeIdx/episodeTotal)*np.pi))
-
-		return lr, ep
-
-
 	def computeHyperparameters(self, episodeIdx):
+		lr = 0.1
 		ep_initial = 0.2
 		k = 1e-4
 	
 		ep = ep_initial * np.exp(-k*episodeIdx)
-		return self.learningRate, ep
+		return lr, ep
 
 if __name__ == '__main__':
 
@@ -166,7 +155,7 @@ if __name__ == '__main__':
 			observation = nextObservation
 			totalReward += reward[1]
 
-		if episode % 1000 == 0:
+		if episode > 0 and episode % 1000 == 0:
 			print(totalReward)
 			reward_collect.append(totalReward)
 			totalReward = 0.0
