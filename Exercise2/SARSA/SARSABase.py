@@ -81,10 +81,6 @@ class SARSAAgent(Agent):
 			action = np.random.choice(self.possibleActions)
 		self.episodeRecord.append((state, action, reward))
 
-
-	def computeHyperparameters(self, numTakenActions, episodeNumber):
-		return self.learningRate, self.epsilon
-
 	def toStateRepresentation(self, state):
 		return state[0]
 
@@ -97,6 +93,15 @@ class SARSAAgent(Agent):
 	def setEpsilon(self, epsilon):
 		self.epsilon = epsilon
 
+	def computeHyperparameters(self, episodeIdx):
+		lr = 0.1
+		ep_initial = 0.2
+		k = 1e-4
+	
+		ep = ep_initial * np.exp(-k*episodeIdx)
+		return lr, ep	
+
+		
 if __name__ == '__main__':
 
 	parser = argparse.ArgumentParser()

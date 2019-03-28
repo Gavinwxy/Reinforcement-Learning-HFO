@@ -105,6 +105,14 @@ class MonteCarloAgent(Agent):
 
 	def computeHyperparameters(self, numTakenActions, episodeNumber):
 		return self.epsilon
+
+	def computeHyperparameters(self, episodeIdx):
+		lr = 0.1
+		ep_initial = 0.2
+		k = 1e-4
+	
+		ep = ep_initial * np.exp(-k*episodeIdx)
+		return lr, ep		
 	
 if __name__ == '__main__':
 
@@ -131,7 +139,7 @@ if __name__ == '__main__':
 		status = 0
 
 		while status==0:
-			epsilon = agent.computeHyperparameters(numTakenActions, episode)
+			epsilon = agent.computeHyperparameters(episode)
 			agent.setEpsilon(epsilon)
 			obsCopy = observation.copy()
 			agent.setState(agent.toStateRepresentation(obsCopy))
