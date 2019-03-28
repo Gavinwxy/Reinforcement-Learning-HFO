@@ -11,7 +11,7 @@ if __name__ == '__main__':
 
 	parser = argparse.ArgumentParser()
 	parser.add_argument('--id', type=int, default=1)
-	parser.add_argument('--numEpisodes', type=int, default=1000)
+	parser.add_argument('--numEpisodes', type=int, default=5000)
 	args=parser.parse_args()
 
 	hfoEnv = HFODefendingPlayer(agentId = args.id)
