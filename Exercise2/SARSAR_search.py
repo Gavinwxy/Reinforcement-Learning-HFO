@@ -94,13 +94,13 @@ class SARSAAgent(Agent):
 		self.epsilon = epsilon
 
 	def computeHyperparameters(self, episodeIdx):
-		lr = 0.1
+		lr_initial = 0.2
 		ep_initial = 0.2
-		k = 1e-4
-	
+		k = 2e-4
+		
+		lr = lr_initial * np.exp(-k*episodeIdx)
 		ep = ep_initial * np.exp(-k*episodeIdx)
-		return lr, ep, ep_initial, k	
-
+		return lr, ep
 		
 if __name__ == '__main__':
 
@@ -153,8 +153,12 @@ if __name__ == '__main__':
 			
 			observation = nextObservation
 
+			if reward == 1:
+				goal_cnt += 1
+
 		agent.setExperience(agent.toStateRepresentation(nextObservation), None, None, None, None)
 		agent.learn()
+
 
 		if episode > 0 and episode % 1000 == 0:
 			goal_collect.append(goal_cnt)

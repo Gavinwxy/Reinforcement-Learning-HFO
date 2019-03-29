@@ -113,7 +113,7 @@ class MonteCarloAgent(Agent):
 
 	def computeHyperparameters_exp(self, episodeIdx):
 		ep_initial = 0.2
-		k = 1e-4
+		k = 3e-4
 		ep = ep_initial * np.exp(-k*episodeIdx)
 		return ep, ep_initial, k			
 	
@@ -152,7 +152,11 @@ if __name__ == '__main__':
 			agent.setExperience(agent.toStateRepresentation(obsCopy), action, reward, status, agent.toStateRepresentation(nextObservation))
 			observation = nextObservation
 
+			if reward == 1:
+				goal_cnt += 1
+
 		agent.learn()
+
 
 		if episode > 0 and episode % 1000 == 0:
 			goal_collect.append(goal_cnt)

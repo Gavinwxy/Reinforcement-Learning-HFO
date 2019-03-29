@@ -103,13 +103,11 @@ class MonteCarloAgent(Agent):
 		self.epsilon = epsilon
 
 
-	def computeHyperparameters(self, numTakenActions, episodeNumber):
-		return self.epsilon
-
 	def computeHyperparameters(self, episodeIdx):
-		ep = 0.1
-		
-		return ep		
+		ep_initial = 0.2
+		k = 3e-4
+		ep = ep_initial * np.exp(-k*episodeIdx)
+		return ep
 	
 if __name__ == '__main__':
 

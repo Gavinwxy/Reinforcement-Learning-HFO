@@ -87,10 +87,11 @@ class QLearningAgent(Agent):
 	#	raise NotImplementedError
 		
 	def computeHyperparameters(self, episodeIdx):
-		lr = 0.1
+		lr_initial = 0.2
 		ep_initial = 0.2
-		k = 1e-4
-	
+		k = 3e-4
+		
+		lr = lr_initial * np.exp(-k*episodeIdx)
 		ep = ep_initial * np.exp(-k*episodeIdx)
 		return lr, ep, ep_initial, k	
 
