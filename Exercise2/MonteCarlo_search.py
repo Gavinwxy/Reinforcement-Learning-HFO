@@ -136,6 +136,7 @@ if __name__ == '__main__':
 	numEpisodes = args.numEpisodes
 	numTakenActions = 0
 	goal_cnt = 0
+	goal_collect = []
 	# Run training Monte Carlo Method
 	for episode in range(numEpisodes):	
 		agent.reset()
