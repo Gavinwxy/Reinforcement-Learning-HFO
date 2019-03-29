@@ -103,7 +103,7 @@ def train(rank, args, value_network, target_network, optimizer, device, lock, co
 			batch_loss += loss		
 			
 
-			with lock:
+			with counter.get_lock():
 				# Update global counter
 				counter.value = counter.value + 1
 				if counter.value > 0 and counter.value % 1e6 == 0:
@@ -125,19 +125,19 @@ def train(rank, args, value_network, target_network, optimizer, device, lock, co
 					goal_cnt = 0
 
 
-			#  Update thread counter
-			t += 1
+				#  Update thread counter
+				t += 1
 
-			# Update target network parameter
-			if counter.value % tnet_update == 0:
-				hard_copy(target_network, value_network)
+				# Update target network parameter
+				if counter.value % tnet_update == 0:
+					hard_copy(target_network, value_network)
 
-			# Update value network parameter
-			if t % vnet_update == 0 or done:
-				optimizer.zero_grad()
-				batch_loss.backward(retain_graph=True)
-				optimizer.step()
-				batch_loss = 0
+				# Update value network parameter
+				if t % vnet_update == 0 or done:
+					optimizer.zero_grad()
+					batch_loss.backward(retain_graph=True)
+					optimizer.step()
+					batch_loss = 0
 			
 
 
