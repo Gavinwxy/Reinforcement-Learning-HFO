@@ -135,6 +135,7 @@ if __name__ == '__main__':
 	agent = MonteCarloAgent(discountFactor = 0.99, epsilon = 0.1)
 	numEpisodes = args.numEpisodes
 	numTakenActions = 0
+	goal_cnt = 0
 	# Run training Monte Carlo Method
 	for episode in range(numEpisodes):	
 		agent.reset()

@@ -94,11 +94,10 @@ class SARSAAgent(Agent):
 		self.epsilon = epsilon
 
 	def computeHyperparameters(self, episodeIdx):
-		lr_initial = 0.2
+		lr = 0.2
 		ep_initial = 0.2
+		
 		k = 3e-4
-
-		lr = lr_initial * np.exp(-k*episodeIdx)	
 		ep = ep_initial * np.exp(-k*episodeIdx)
 		return lr, ep	
 
